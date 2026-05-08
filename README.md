@@ -123,15 +123,14 @@ cargo install probe-rs-tools
 
 ### Build (firmware)
 
-```bash
-# From the firmware/ subdirectory (uses firmware/.cargo/config.toml default target):
-cd firmware && cargo build --release
+Firmware must be built from the `firmware/` subdirectory so that the
+ARM-specific Cargo config (`firmware/.cargo/config.toml`) is applied automatically:
 
-# Or from the workspace root with an explicit target:
-cargo build -p etag --target thumbv7em-none-eabihf --release
+```bash
+cd firmware && cargo build --release
 ```
 
-The binary lands at `target/thumbv7em-none-eabihf/release/etag`.
+The binary lands at `firmware/target/thumbv7em-none-eabihf/release/etag`.
 
 ### Flash
 
@@ -151,8 +150,8 @@ defmt log output is streamed via RTT to your terminal.
 The QR-code generator and Grocy data-type modules contain host-runnable tests:
 
 ```bash
-# Tests compile for x86-64 (host) — no hardware needed.
-cargo test -p etag --target x86_64-unknown-linux-gnu --lib
+# Run from the firmware/ subdirectory (no hardware needed).
+cd firmware && cargo test --target x86_64-unknown-linux-gnu --lib
 ```
 
 ---

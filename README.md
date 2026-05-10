@@ -77,6 +77,7 @@ src/
   buttons.rs   — Debounced button handling
   battery.rs   — LiPo voltage monitoring via SAADC
   grocy.rs     — Grocy data types, Grocycode helpers, BLE GATT skeleton
+  mesh.rs      — BLE Mesh foundation message types and payload codecs (Phase-0)
 ```
 
 ### QR code generator (`src/qr.rs`)
@@ -237,6 +238,8 @@ The binary lands at `target/release/etag-bridge`.
 | `SCAN_INTERVAL_SECS`  | ❌        | `5`     | Pause between scan passes                       |
 | `DEVICE_TIMEOUT_SECS` | ❌        | `300`   | Seconds before a device is considered "away"    |
 | `STATS_INTERVAL_SECS` | ❌        | `60`    | Seconds between device-stats log summaries      |
+| `TRANSPORT_MODE`      | ❌        | `gatt`  | Bridge transport mode: `gatt` or `mesh`         |
+| `MESH_POLL_INTERVAL_SECS` | ❌    | `5`     | Heartbeat interval when `TRANSPORT_MODE=mesh`   |
 
 ### Quick start
 
@@ -245,6 +248,19 @@ export GROCY_URL=http://grocy.local
 export GROCY_API_KEY=your_api_key_here
 RUST_LOG=etag_bridge=debug ./target/release/etag-bridge
 ```
+
+### Mesh mode (Phase-0 foundation)
+
+```bash
+export GROCY_URL=http://grocy.local
+export GROCY_API_KEY=your_api_key_here
+export TRANSPORT_MODE=mesh
+RUST_LOG=etag_bridge=info ./target/release/etag-bridge
+```
+
+`TRANSPORT_MODE=mesh` currently enables the mesh foundation runtime (idempotent
+mesh event processing scaffolding and runtime heartbeat) while preserving the
+existing `gatt` mode as default production behavior.
 
 ### Running as a systemd service
 

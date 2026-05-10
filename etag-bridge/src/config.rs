@@ -125,7 +125,7 @@ fn env_transport_mode(name: &str, default: TransportMode) -> Result<TransportMod
         Ok(s) => match s.trim().to_ascii_lowercase().as_str() {
             "gatt" => Ok(TransportMode::Gatt),
             "mesh" => Ok(TransportMode::Mesh),
-            _ => anyhow::bail!("{name} must be one of: gatt, mesh"),
+            _ => anyhow::bail!("{name} must be one of: gatt, mesh (got: {})", s),
         },
         Err(_) => Ok(default),
     }

@@ -16,12 +16,14 @@ pub enum MeshNodeRole {
     RelayRepeater = 1,
 }
 
-impl MeshNodeRole {
-    fn from_u8(v: u8) -> Option<Self> {
+impl core::convert::TryFrom<u8> for MeshNodeRole {
+    type Error = ();
+
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
-            0 => Some(Self::TagLpn),
-            1 => Some(Self::RelayRepeater),
-            _ => None,
+            0 => Ok(Self::TagLpn),
+            1 => Ok(Self::RelayRepeater),
+            _ => Err(()),
         }
     }
 }
@@ -35,12 +37,14 @@ pub enum InventoryOp {
     StockAbsolute = 1,
 }
 
-impl InventoryOp {
-    fn from_u8(v: u8) -> Option<Self> {
+impl core::convert::TryFrom<u8> for InventoryOp {
+    type Error = ();
+
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
-            0 => Some(Self::StockDelta),
-            1 => Some(Self::StockAbsolute),
-            _ => None,
+            0 => Ok(Self::StockDelta),
+            1 => Ok(Self::StockAbsolute),
+            _ => Err(()),
         }
     }
 }
@@ -110,7 +114,7 @@ pub fn decode_inventory(data: &[u8]) -> Option<InventoryMessage> {
 
     let revision = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
     let product_id = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
-    let op = InventoryOp::from_u8(data[8])?;
+    let op = InventoryOp::try_from(data[8]).ok()?;
     let stock_value = i32::from_le_bytes([data[9], data[10], data[11], data[12]]);
     let battery_pct = data[13];
 
@@ -149,7 +153,7 @@ pub fn decode_config(data: &[u8]) -> Option<ConfigMessage> {
     }
 
     let revision = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
-    let role = MeshNodeRole::from_u8(data[4])?;
+    let role = MeshNodeRole::try_from(data[4]).ok()?;
     let publish_interval_secs = u16::from_le_bytes([data[5], data[6]]);
 
     let grocy_len = data[7] as usize;
@@ -159,7 +163,7 @@ pub fn decode_config(data: &[u8]) -> Option<ConfigMessage> {
         return None;
     }
 
-    let expected = 9 + grocy_len + product_len;
+    let expected = 9usize.checked_add(grocy_len)?.checked_add(product_len)?;
     if data.len() != expected {
         return None;
     }

@@ -52,7 +52,10 @@ impl MeshRevisionGuard {
         Self::default()
     }
 
-    /// Accept only strictly increasing revisions.
+    /// Accept only strictly increasing revisions for `node_key`.
+    ///
+    /// Returns `false` for duplicate or stale revisions (`revision <= last_seen`).
+    /// On acceptance, the latest revision is stored internally and `true` is returned.
     async fn accept(&self, node_key: &str, revision: u32) -> bool {
         let mut map = self.inner.write().await;
         match map.get(node_key).copied() {
@@ -128,7 +131,7 @@ pub async fn apply_inventory_event(
 /// This mode keeps the process alive and reports status while transport ingest
 /// integration is implemented in subsequent phases.
 pub async fn run(state: Arc<AppState>) -> Result<()> {
-    warn!("Mesh transport mode enabled (Phase-0 foundation): transport ingestion is not yet implemented");
+    warn!("Mesh mode enabled (Phase-0): ingestion not yet implemented");
 
     let mut ticker = time::interval(Duration::from_secs(state.config.mesh_poll_interval_secs));
     ticker.tick().await;

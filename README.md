@@ -190,6 +190,13 @@ for detailed integration instructions.
 - [ ] Support additional Grocy objects (locations, chores)
 - [ ] Port to nRF5340 (dual-core) for concurrent BLE + display
 
+## BLE Mesh planning
+
+For a deployment plan covering 30+ eTag nodes, optional repeaters, and a central
+Raspberry Pi bridge to Grocy, see:
+
+- [`docs/ble-mesh-plan.md`](docs/ble-mesh-plan.md)
+
 ---
 
 ## etag-bridge — Raspberry Pi BLE ↔ Grocy Bridge

@@ -240,6 +240,7 @@ The binary lands at `target/release/etag-bridge`.
 | `STATS_INTERVAL_SECS` | ❌        | `60`    | Seconds between device-stats log summaries      |
 | `TRANSPORT_MODE`      | ❌        | `gatt`  | Bridge transport mode: `gatt` or `mesh`         |
 | `MESH_POLL_INTERVAL_SECS` | ❌    | `5`     | Heartbeat interval when `TRANSPORT_MODE=mesh`   |
+| `MESH_INGEST_BIND_ADDR` | ❌      | `127.0.0.1:9478` | UDP bind address for mesh ingest packets |
 
 ### Quick start
 
@@ -259,8 +260,17 @@ RUST_LOG=etag_bridge=info ./target/release/etag-bridge
 ```
 
 `TRANSPORT_MODE=mesh` currently enables the mesh foundation runtime (idempotent
-mesh event processing scaffolding and runtime heartbeat) while preserving the
-existing `gatt` mode as default production behavior.
+mesh event processing with UDP ingest plus runtime heartbeat, while preserving
+the existing `gatt` mode as default production behavior.
+
+Mesh ingest packet wire format (little-endian, 16 bytes):
+
+- `node_unicast: u16`
+- `revision: u32`
+- `product_id: u32`
+- `op: u8` (`0=delta`, `1=absolute`)
+- `stock_value: i32`
+- `battery_pct: u8` (`0..=100`)
 
 ### Running as a systemd service
 

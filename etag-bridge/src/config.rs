@@ -20,6 +20,7 @@
 //! | `STATS_INTERVAL_SECS` | `60`    | Seconds between device-stats log summaries   |
 //! | `TRANSPORT_MODE`      | `gatt`  | `gatt` or `mesh` runtime mode                |
 //! | `MESH_POLL_INTERVAL_SECS` | `5` | Mesh heartbeat interval in mesh mode         |
+//! | `MESH_INGEST_BIND_ADDR` | `127.0.0.1:9478` | UDP bind address for mesh ingest |
 //!
 //! # Example `.env` / systemd `EnvironmentFile`
 //!
@@ -82,6 +83,9 @@ pub struct Config {
 
     /// Heartbeat interval used by mesh runtime mode.
     pub mesh_poll_interval_secs: u64,
+
+    /// UDP socket bind address for mesh ingest packets in mesh mode.
+    pub mesh_ingest_bind_addr: String,
 }
 
 impl Config {
@@ -105,6 +109,8 @@ impl Config {
             stats_interval_secs: env_u64("STATS_INTERVAL_SECS", 60)?,
             transport_mode: env_transport_mode("TRANSPORT_MODE", TransportMode::Gatt)?,
             mesh_poll_interval_secs: env_u64("MESH_POLL_INTERVAL_SECS", 5)?,
+            mesh_ingest_bind_addr: std::env::var("MESH_INGEST_BIND_ADDR")
+                .unwrap_or_else(|_| "127.0.0.1:9478".to_owned()),
         })
     }
 }

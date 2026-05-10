@@ -189,6 +189,58 @@ pub fn decode_config(data: &[u8]) -> Option<ConfigMessage> {
     })
 }
 
+/// Runtime helper for publishing inventory updates from a tag node.
+#[derive(Debug, Clone)]
+pub struct MeshTagPublisher {
+    product_id: u32,
+    next_revision: u32,
+}
+
+impl MeshTagPublisher {
+    /// Create a publisher state for one product ID.
+    pub const fn new(product_id: u32) -> Self {
+        Self {
+            product_id,
+            next_revision: 1,
+        }
+    }
+
+    /// Build and encode a stock-delta publish payload.
+    pub fn build_delta_frame(&mut self, delta: i32, battery_pct: u8) -> [u8; INVENTORY_WIRE_LEN] {
+        let msg = InventoryMessage {
+            revision: self.next_revision,
+            product_id: self.product_id,
+            op: InventoryOp::StockDelta,
+            stock_value: delta,
+            battery_pct,
+        };
+        self.next_revision = self.next_revision.saturating_add(1);
+        encode_inventory(&msg)
+    }
+
+    /// Build and encode an absolute-stock publish payload.
+    pub fn build_absolute_frame(
+        &mut self,
+        stock_count: i32,
+        battery_pct: u8,
+    ) -> [u8; INVENTORY_WIRE_LEN] {
+        let msg = InventoryMessage {
+            revision: self.next_revision,
+            product_id: self.product_id,
+            op: InventoryOp::StockAbsolute,
+            stock_value: stock_count,
+            battery_pct,
+        };
+        self.next_revision = self.next_revision.saturating_add(1);
+        encode_inventory(&msg)
+    }
+
+    /// Parse a product ID from `grcy-p-{id}`.
+    pub fn parse_product_id(grocycode: &str) -> Option<u32> {
+        grocycode.strip_prefix("grcy-p-")?.parse::<u32>().ok()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -241,5 +293,22 @@ mod tests {
     fn config_decode_rejects_length_mismatch() {
         let data = [0_u8, 0, 0, 0, 0, 0, 0, 1, 0];
         assert!(decode_config(&data).is_none());
+    }
+
+    #[test]
+    fn publisher_emits_incrementing_revisions() {
+        let mut publisher = MeshTagPublisher::new(42);
+        let f1 = publisher.build_delta_frame(1, 80);
+        let f2 = publisher.build_absolute_frame(7, 79);
+
+        assert_eq!(decode_inventory(&f1).unwrap().revision, 1);
+        assert_eq!(decode_inventory(&f2).unwrap().revision, 2);
+    }
+
+    #[test]
+    fn parse_product_id_from_grocycode() {
+        assert_eq!(MeshTagPublisher::parse_product_id("grcy-p-7"), Some(7));
+        assert_eq!(MeshTagPublisher::parse_product_id("grcy-lo-7"), None);
+        assert_eq!(MeshTagPublisher::parse_product_id(""), None);
     }
 }

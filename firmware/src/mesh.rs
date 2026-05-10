@@ -190,6 +190,9 @@ pub fn decode_config(data: &[u8]) -> Option<ConfigMessage> {
 }
 
 /// Runtime helper for publishing inventory updates from a tag node.
+///
+/// Revisions are monotonic per boot unless caller restores persisted state.
+/// For production mesh replay protection, persist and restore revision counters.
 #[derive(Debug, Clone)]
 pub struct MeshTagPublisher {
     product_id: u32,

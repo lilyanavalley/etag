@@ -49,7 +49,7 @@ use panic_probe as _; // panic handler
 
 // Pure-logic modules come from the companion library crate (`src/lib.rs`).
 use etag::grocy::{grocycode_for_product, TagState};
-use etag::mesh::{decode_inventory, MeshTagPublisher};
+use etag::mesh::MeshTagPublisher;
 use etag::qr::QrCode;
 
 use buttons::ButtonEvent;
@@ -149,30 +149,24 @@ async fn main(_spawner: Spawner) {
             ButtonEvent::Increment => {
                 state.increment();
                 defmt::info!("Stock → {}", state.stock_count);
-                let frame = mesh_publisher.build_delta_frame(1, bat_pct);
-                if let Some(msg) = decode_inventory(&frame) {
-                    defmt::debug!(
-                        "mesh publish delta rev={} product={} delta={} battery={}",
-                        msg.revision,
-                        msg.product_id,
-                        msg.stock_value,
-                        msg.battery_pct
-                    );
-                }
+                let _frame = mesh_publisher.build_delta_frame(1, bat_pct);
+                defmt::debug!(
+                    "mesh publish delta product={} delta={} battery={}",
+                    product_id,
+                    1,
+                    bat_pct
+                );
             }
             ButtonEvent::Decrement => {
                 state.decrement();
                 defmt::info!("Stock → {}", state.stock_count);
-                let frame = mesh_publisher.build_delta_frame(-1, bat_pct);
-                if let Some(msg) = decode_inventory(&frame) {
-                    defmt::debug!(
-                        "mesh publish delta rev={} product={} delta={} battery={}",
-                        msg.revision,
-                        msg.product_id,
-                        msg.stock_value,
-                        msg.battery_pct
-                    );
-                }
+                let _frame = mesh_publisher.build_delta_frame(-1, bat_pct);
+                defmt::debug!(
+                    "mesh publish delta product={} delta={} battery={}",
+                    product_id,
+                    -1,
+                    bat_pct
+                );
             }
         }
 

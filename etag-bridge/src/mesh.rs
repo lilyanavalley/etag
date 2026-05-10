@@ -179,12 +179,21 @@ pub async fn apply_inventory_event(
     }
 
     let sync_previous = match event.op {
-        MeshInventoryOp::StockDelta => previous.or(Some(prior_stock)),
-        MeshInventoryOp::StockAbsolute => previous,
-    };
-
-    let Some(sync_previous) = sync_previous else {
-        return Ok(ApplyOutcome::BaselineApplied);
+        MeshInventoryOp::StockDelta => match previous {
+            Some(prev) => prev,
+            None => {
+                debug!(
+                    node = %synthetic_addr,
+                    assumed_baseline = prior_stock,
+                    "first delta event assumes local baseline"
+                );
+                prior_stock
+            }
+        },
+        MeshInventoryOp::StockAbsolute => match previous {
+            Some(prev) => prev,
+            None => return Ok(ApplyOutcome::BaselineApplied),
+        },
     };
 
     if sync_previous == resolved_stock {

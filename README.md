@@ -182,4 +182,4 @@ for detailed integration instructions.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+GNU General Public License, version 3 or later — see [LICENSE](LICENSE).

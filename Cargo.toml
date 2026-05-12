@@ -16,6 +16,7 @@
 members = [
     "firmware",
     "etag-bridge",
+    "etag-gui/src-tauri",
 ]
 resolver = "2"
 

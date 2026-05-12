@@ -53,6 +53,7 @@ use tracing_subscriber::{fmt, EnvFilter};
 mod ble;
 mod config;
 mod device;
+mod grpc;
 mod grocy;
 
 pub use config::Config;
@@ -108,6 +109,7 @@ async fn main() -> Result<()> {
         scan_duration_secs = config.scan_duration_secs,
         scan_interval_secs = config.scan_interval_secs,
         stats_interval_secs = config.stats_interval_secs,
+        grpc_listen_addr   = %config.grpc_listen_addr,
         "Configuration loaded"
     );
 
@@ -126,6 +128,14 @@ async fn main() -> Result<()> {
         }
     });
 
+    // ── gRPC server task ──────────────────────────────────────────────────────
+    let grpc_state  = Arc::clone(&state);
+    let grpc_handle = tokio::spawn(async move {
+        if let Err(e) = grpc::serve(grpc_state).await {
+            error!(?e, "gRPC server exited with error");
+        }
+    });
+
     // ── Graceful shutdown ─────────────────────────────────────────────────────
     tokio::select! {
         _ = signal::ctrl_c() => {
@@ -133,6 +143,9 @@ async fn main() -> Result<()> {
         }
         _ = ble_handle => {
             info!("BLE task completed");
+        }
+        _ = grpc_handle => {
+            info!("gRPC server stopped");
         }
     }
 

@@ -11,7 +11,7 @@ path = "src/main.rs"
 
 [build-dependencies]
 # gRPC code generation from proto/etag_bridge.proto
-tonic-build          = "0.14"
+tonic-prost-build    = "0.14"
 protoc-bin-vendored  = "3"
 
 [dependencies]
@@ -44,5 +44,6 @@ chrono = { version = "0.4", features = ["serde"] }
 
 # gRPC server (exposes bridge state to GUI and other clients)
 tonic        = { version = "0.14", features = ["transport"] }
+tonic-prost  = "0.14"
 prost        = "0.14"
 tokio-stream = "0.1"

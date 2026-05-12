@@ -9,10 +9,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Point tonic-build at the vendored protoc.
     std::env::set_var("PROTOC", protoc);
 
-    tonic_build::configure()
-        .build_server(true)
-        .build_client(false) // bridge only needs the server side
-        .compile_protos(&["../proto/etag_bridge.proto"], &["../proto"])?;
+    tonic_prost_build::compile_protos("../proto/etag_bridge.proto")?;
 
     println!("cargo:rerun-if-changed=../proto/etag_bridge.proto");
     println!("cargo:rerun-if-changed=build.rs");

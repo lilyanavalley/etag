@@ -21,7 +21,7 @@ path = "src/main.rs"
 # Tauri build-time metadata injection.
 tauri-build = { version = "2", features = [] }
 # gRPC code generation from proto/etag_bridge.proto.
-tonic-build         = "0.14"
+tonic-prost-build   = "0.14"
 protoc-bin-vendored = "3"
 
 # ── Runtime dependencies ──────────────────────────────────────────────────────
@@ -31,8 +31,9 @@ protoc-bin-vendored = "3"
 tauri = { version = "2", features = [] }
 
 # gRPC client — connects to the etag-bridge server.
-tonic = { version = "0.14", features = ["transport"] }
-prost = "0.14"
+tonic       = { version = "0.14", features = ["transport"] }
+tonic-prost = "0.14"
+prost       = "0.14"
 
 # Async runtime (Tauri's internal runtime; tokio is needed for tonic).
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }

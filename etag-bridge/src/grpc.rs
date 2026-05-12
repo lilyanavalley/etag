@@ -30,8 +30,10 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
+use futures::StreamExt as _;
 use tokio::time;
-use tokio_stream::{wrappers::IntervalStream, Stream, StreamExt as _};
+use tokio_stream::wrappers::IntervalStream;
+use tokio_stream::Stream;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
 use tracing::{info, warn};
@@ -57,11 +59,11 @@ fn tag_to_proto(tag: &crate::device::TagInfo, timeout_secs: i64) -> NodeInfo {
     let secs_since = (now - tag.last_seen).num_seconds();
 
     let status = if tag.connected {
-        NodeStatus::NodeStatusActive as i32
+        NodeStatus::Active as i32
     } else if secs_since > timeout_secs {
-        NodeStatus::NodeStatusAway as i32
+        NodeStatus::Away as i32
     } else {
-        NodeStatus::NodeStatusActive as i32
+        NodeStatus::Active as i32
     };
 
     NodeInfo {
@@ -158,12 +160,12 @@ impl EtagBridge for EtagBridgeService {
                 let state = Arc::clone(&state);
                 async move { state.registry.get_all().await }
             })
-            .flat_map(move |nodes| {
+            .flat_map(move |nodes: Vec<crate::device::TagInfo>| {
                 let infos: Vec<Result<NodeInfo, Status>> = nodes
                     .iter()
                     .map(|t| Ok(tag_to_proto(t, timeout)))
                     .collect();
-                tokio_stream::iter(infos)
+                futures::stream::iter(infos)
             });
 
         Ok(Response::new(Box::pin(stream)))

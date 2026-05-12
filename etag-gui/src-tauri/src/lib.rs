@@ -28,7 +28,7 @@ mod proto {
 
 use proto::{
     etag_bridge_client::EtagBridgeClient, GetNodeRequest, LinkNodeRequest, ListNodesRequest,
-    NodeStatus, ProvisionNodeRequest, WatchNodesRequest,
+    ProvisionNodeRequest,
 };
 
 // ── Shared application state ──────────────────────────────────────────────────
@@ -70,9 +70,9 @@ pub struct NodeInfoDto {
 impl From<proto::NodeInfo> for NodeInfoDto {
     fn from(n: proto::NodeInfo) -> Self {
         let status = match n.status {
-            s if s == NodeStatus::NodeStatusActive as i32 => "active",
-            s if s == NodeStatus::NodeStatusAway as i32 => "away",
-            s if s == NodeStatus::NodeStatusProvisioning as i32 => "provisioning",
+            s if s == proto::NodeStatus::Active as i32 => "active",
+            s if s == proto::NodeStatus::Away as i32 => "away",
+            s if s == proto::NodeStatus::Provisioning as i32 => "provisioning",
             _ => "unknown",
         }
         .to_owned();
@@ -114,7 +114,7 @@ async fn connect(state: &tauri::State<'_, BridgeState>) -> Result<EtagBridgeClie
 
 /// Return a snapshot of all nodes currently known to the bridge.
 #[tauri::command]
-pub async fn list_nodes(
+async fn list_nodes(
     bridge: tauri::State<'_, BridgeState>,
 ) -> Result<Vec<NodeInfoDto>, String> {
     let mut client = connect(&bridge).await?;
@@ -127,7 +127,7 @@ pub async fn list_nodes(
 
 /// Return a single node by BLE address.
 #[tauri::command]
-pub async fn get_node(
+async fn get_node(
     address: String,
     bridge:  tauri::State<'_, BridgeState>,
 ) -> Result<NodeInfoDto, String> {
@@ -144,7 +144,7 @@ pub async fn get_node(
 /// Returns immediately with `success: false` and a WIP message until the
 /// mesh branch is merged.
 #[tauri::command]
-pub async fn provision_node(
+async fn provision_node(
     address:          String,
     mesh_network_key: Option<String>,
     bridge:           tauri::State<'_, BridgeState>,
@@ -162,7 +162,7 @@ pub async fn provision_node(
 ///
 /// `grocycode` must match the `grcy-p-<id>` format.
 #[tauri::command]
-pub async fn link_node_to_grocy(
+async fn link_node_to_grocy(
     address:   String,
     grocycode: String,
     bridge:    tauri::State<'_, BridgeState>,
@@ -178,7 +178,7 @@ pub async fn link_node_to_grocy(
 
 /// Update the gRPC address used to reach the bridge (persists for this session).
 #[tauri::command]
-pub fn set_bridge_addr(
+fn set_bridge_addr(
     addr:   String,
     bridge: tauri::State<'_, BridgeState>,
 ) -> Result<(), String> {
@@ -188,7 +188,7 @@ pub fn set_bridge_addr(
 
 /// Return the currently configured bridge gRPC address.
 #[tauri::command]
-pub fn get_bridge_addr(bridge: tauri::State<'_, BridgeState>) -> String {
+fn get_bridge_addr(bridge: tauri::State<'_, BridgeState>) -> String {
     bridge.addr.lock().unwrap().clone()
 }
 

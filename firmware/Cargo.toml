@@ -22,7 +22,7 @@ heapless = "0.8"
 [target.'cfg(target_arch = "arm")'.dependencies]
 # Embassy async framework
 embassy-executor = { version = "0.10", features = [
-    # "arch-cortex-m",
+    "platform-cortex-m",
     "executor-thread",
     "defmt",
 ] }

@@ -12,6 +12,7 @@
  */
 
 import { invoke } from "@tauri-apps/api/core";
+import 'remixicon/fonts/remixicon.css';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 

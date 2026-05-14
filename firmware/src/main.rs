@@ -49,7 +49,6 @@ use embassy_time::Duration;
 use panic_probe as _; // panic handler
 
 // Pure-logic modules come from the companion library crate (`src/lib.rs`).
-use etag::grocy::{grocycode_for_product, TagState};
 use etag::mesh::MeshTagPublisher;
 use etag::qr::QrCode;
 use etag::{

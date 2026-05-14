@@ -1,0 +1,54 @@
+[package]
+name = "etag"
+version = "0.1.0"
+edition = "2021"
+description = "ePaper inventory tag for Grocy ERP integration on nRF52840"
+readme = "../README.md"
+license = "MIT"
+
+[[bin]]
+name = "etag"
+path = "src/main.rs"
+
+[lib]
+name = "etag"
+path = "src/lib.rs"
+
+# ── Dependencies available on ALL targets (used by the library for host tests) ─
+[dependencies]
+heapless = "0.8"
+
+# ── Embedded-only dependencies (ARM Cortex-M4 target) ───────────────────────
+[target.'cfg(target_arch = "arm")'.dependencies]
+# Embassy async framework
+embassy-executor = { version = "0.5", features = [
+    "arch-cortex-m",
+    "executor-thread",
+    "defmt",
+    "integrated-timers",
+] }
+embassy-nrf = { version = "0.2", features = [
+    "nrf52840",
+    "time-driver-rtc1",
+    "gpiote",
+    "defmt",
+] }
+embassy-time    = { version = "0.3", features = ["defmt", "defmt-timestamp-uptime"] }
+embassy-sync    = { version = "0.5", features = ["defmt"] }
+embassy-futures = "0.1"
+
+# Cortex-M support
+cortex-m    = { version = "0.7", features = ["inline-asm", "critical-section-single-core"] }
+cortex-m-rt = "0.7"
+
+# Embedded-HAL traits (v1)
+embedded-hal       = "1.0"
+embedded-hal-async = "1.0"
+
+# Display graphics
+embedded-graphics = "0.8"
+
+# Logging / panic handling
+defmt       = "0.3"
+defmt-rtt   = "0.4"
+panic-probe = { version = "0.3", features = ["print-defmt"] }

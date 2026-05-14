@@ -1,11 +1,12 @@
 # etag — ePaper Inventory Tag + Grocy Bridge
 
-A **Cargo Workspace** containing two packages:
+A **Cargo Workspace** containing three packages:
 
 | Package | Description |
 |---------|-------------|
 | [`firmware/`](firmware/) | nRF52840 embedded firmware — ePaper tag with BLE GATT service |
 | [`etag-bridge/`](etag-bridge/) | Raspberry Pi server — BLE central that bridges etag ↔ Grocy ERP |
+| [`etag-gui/`](etag-gui/) | Graphical interface to `etag-bridge`, that runs anywhere |
 
 ---
 

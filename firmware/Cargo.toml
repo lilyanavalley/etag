@@ -21,20 +21,19 @@ heapless = "0.8"
 # ── Embedded-only dependencies (ARM Cortex-M4 target) ───────────────────────
 [target.'cfg(target_arch = "arm")'.dependencies]
 # Embassy async framework
-embassy-executor = { version = "0.5", features = [
-    "arch-cortex-m",
+embassy-executor = { version = "0.10", features = [
+    "platform-cortex-m",
     "executor-thread",
     "defmt",
-    "integrated-timers",
 ] }
-embassy-nrf = { version = "0.2", features = [
+embassy-nrf = { version = "0.10", features = [
     "nrf52840",
     "time-driver-rtc1",
     "gpiote",
     "defmt",
 ] }
-embassy-time    = { version = "0.3", features = ["defmt", "defmt-timestamp-uptime"] }
-embassy-sync    = { version = "0.5", features = ["defmt"] }
+embassy-time    = { version = "0.5", features = ["defmt", "defmt-timestamp-uptime"] }
+embassy-sync    = { version = "0.8", features = ["defmt"] }
 embassy-futures = "0.1"
 
 # Cortex-M support

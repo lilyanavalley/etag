@@ -1,0 +1,22 @@
+{
+  "name": "etag-gui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npx vite --port 1420",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@tailwindcss/vite": "^4",
+    "daisyui": "^5",
+    "tailwindcss": "^4",
+    "vite": "^8"
+  }
+}

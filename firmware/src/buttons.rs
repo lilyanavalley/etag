@@ -14,6 +14,7 @@
 //! Call [`wait_for_button`] from an async Embassy task to suspend until either
 //! button is pressed.
 
+use embassy_futures::select::{select, Either};
 use embassy_nrf::gpio::Input;
 use embassy_time::{Duration, Timer};
 
@@ -33,10 +34,7 @@ pub enum ButtonEvent {
 /// Includes a debounce delay of [`BUTTON_DEBOUNCE_MS`] milliseconds: after
 /// detecting a falling edge the function waits briefly and confirms the pin
 /// is still low before returning.
-pub async fn wait_for_button(
-    btn_up: &mut Input<'_>,
-    btn_dn: &mut Input<'_>,
-) -> ButtonEvent {
+pub async fn wait_for_button(btn_up: &mut Input<'_>, btn_dn: &mut Input<'_>) -> ButtonEvent {
     loop {
         // Wait until either pin falls from HIGH → LOW.
         embassy_futures::select::select(
@@ -60,5 +58,20 @@ pub async fn wait_for_button(
             return ButtonEvent::Decrement;
         }
         // Ghost edge — loop and wait again.
+    }
+}
+
+/// Wait for either button, but return `None` if `timeout` elapses first.
+///
+/// This is useful when the main loop must also process non-button events,
+/// such as BLE/bridge state changes.
+pub async fn wait_for_button_timeout(
+    btn_up: &mut Input<'_>,
+    btn_dn: &mut Input<'_>,
+    timeout: Duration,
+) -> Option<ButtonEvent> {
+    match select(wait_for_button(btn_up, btn_dn), Timer::after(timeout)).await {
+        Either::First(event) => Some(event),
+        Either::Second(_) => None,
     }
 }

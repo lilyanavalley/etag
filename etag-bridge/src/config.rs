@@ -12,12 +12,13 @@
 //!
 //! # Optional variables (all have defaults)
 //!
-//! | Variable              | Default | Description                                  |
-//! |-----------------------|---------|----------------------------------------------|
-//! | `SCAN_DURATION_SECS`  | `30`    | Seconds to run each BLE scan pass            |
-//! | `SCAN_INTERVAL_SECS`  | `5`     | Seconds to pause between scan passes         |
-//! | `DEVICE_TIMEOUT_SECS` | `300`   | Seconds before a device is considered "away" |
-//! | `STATS_INTERVAL_SECS` | `60`    | Seconds between device-stats log summaries   |
+//! | Variable              | Default           | Description                                  |
+//! |-----------------------|-------------------|----------------------------------------------|
+//! | `SCAN_DURATION_SECS`  | `30`              | Seconds to run each BLE scan pass            |
+//! | `SCAN_INTERVAL_SECS`  | `5`               | Seconds to pause between scan passes         |
+//! | `DEVICE_TIMEOUT_SECS` | `300`             | Seconds before a device is considered "away" |
+//! | `STATS_INTERVAL_SECS` | `60`              | Seconds between device-stats log summaries   |
+//! | `GRPC_LISTEN_ADDR`    | `127.0.0.1:50051` | TCP address for the gRPC server              |
 //! | `TRANSPORT_MODE`      | `gatt`  | `gatt` or `mesh` runtime mode                |
 //! | `MESH_POLL_INTERVAL_SECS` | `5` | Mesh heartbeat interval in mesh mode         |
 //! | `MESH_INGEST_BIND_ADDR` | `127.0.0.1:9478` | UDP bind address for mesh ingest |
@@ -31,6 +32,7 @@
 //! SCAN_INTERVAL_SECS=5
 //! DEVICE_TIMEOUT_SECS=300
 //! STATS_INTERVAL_SECS=60
+//! GRPC_LISTEN_ADDR=127.0.0.1:50051
 //! ```
 
 use anyhow::{Context, Result};
@@ -78,6 +80,11 @@ pub struct Config {
     /// Set to a large value (e.g. `86400`) to reduce noise.  Default: **60**.
     pub stats_interval_secs: u64,
 
+    /// TCP address on which the gRPC server listens.
+    ///
+    /// The GUI client and other tools connect to this address to query node
+    /// state and issue control commands.  Default: **`127.0.0.1:50051`**.
+    pub grpc_listen_addr: String,
     /// Runtime transport mode (`gatt` or `mesh`).
     pub transport_mode: TransportMode,
 
@@ -106,7 +113,9 @@ impl Config {
             scan_duration_secs: env_u64("SCAN_DURATION_SECS", 30)?,
             scan_interval_secs: env_u64("SCAN_INTERVAL_SECS", 5)?,
             device_timeout_secs: env_u64("DEVICE_TIMEOUT_SECS", 300)?,
-            stats_interval_secs: env_u64("STATS_INTERVAL_SECS", 60)?,
+            stats_interval_secs: env_u64("STATS_INTERVAL_SECS",  60)?,
+            grpc_listen_addr: std::env::var("GRPC_LISTEN_ADDR")
+                .unwrap_or_else(|_| "127.0.0.1:50051".to_owned()),
             transport_mode: env_transport_mode("TRANSPORT_MODE", TransportMode::Gatt)?,
             mesh_poll_interval_secs: env_u64("MESH_POLL_INTERVAL_SECS", 5)?,
             mesh_ingest_bind_addr: std::env::var("MESH_INGEST_BIND_ADDR")

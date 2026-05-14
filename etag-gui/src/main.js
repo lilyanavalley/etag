@@ -272,5 +272,5 @@ function showGlobalAlert(message, type = "info") {
   el.className = `alert alert-${type} text-xs py-1 px-3 max-w-xs`;
   el.textContent = message;
   el.classList.remove("hidden");
-  setTimeout(() => el.classList.add("hidden"), 4000);
+  setTimeout(() => el.classList.add("hidden"), 8000);
 }

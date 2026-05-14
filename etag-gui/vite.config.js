@@ -13,6 +13,9 @@ export default defineConfig({
       // Avoid unnecessary reloads when Rust sources change.
       ignored: ["**/src-tauri/**"],
     },
+    fs: {
+      allow: ["./"],
+    }
   },
 
   // Tauri-specific environment variable prefixes.

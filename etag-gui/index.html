@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="cynical dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,15 +12,8 @@
     <!-- ── Top navbar ─────────────────────────────────────────────────── -->
     <div class="navbar bg-base-200 shadow px-4 gap-2">
       <div class="flex-1 flex items-center gap-3">
-        <!-- Simple SVG logo mark -->
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-             class="w-7 h-7 fill-primary" aria-hidden="true">
-          <rect x="3" y="3" width="8" height="8" rx="1"/>
-          <rect x="13" y="3" width="8" height="8" rx="1"/>
-          <rect x="3" y="13" width="8" height="8" rx="1"/>
-          <rect x="13" y="13" width="8" height="8" rx="1"/>
-        </svg>
-        <span class="font-bold text-lg tracking-tight">etag</span>
+        <i class="ri-price-tag-2-fill text-primary" aria-hidden="true"></i>
+        <span class="font-bold text-lg text-primary tracking-tight">etag</span>
         <span class="text-base-content/50 text-sm hidden sm:inline">Node Manager</span>
       </div>
 
@@ -36,28 +29,28 @@
         <ul class="menu menu-md w-full gap-0.5">
           <li>
             <a id="nav-dashboard" data-tab="dashboard"
-               class="flex items-center gap-2 active">
+               class="flex items-center gap-2 active text-primary">
               <i class="ri-dashboard-3-line text-base" aria-hidden="true"></i>
               Dashboard
             </a>
           </li>
           <li>
             <a id="nav-provision" data-tab="provision"
-               class="flex items-center gap-2">
+               class="flex items-center gap-2 text-primary">
               <i class="ri-tools-line text-base" aria-hidden="true"></i>
               Provision Node
             </a>
           </li>
           <li>
             <a id="nav-link" data-tab="link"
-               class="flex items-center gap-2">
+               class="flex items-center gap-2 text-primary">
               <i class="ri-links-line text-base" aria-hidden="true"></i>
               Link to Grocy
             </a>
           </li>
           <li>
             <a id="nav-settings" data-tab="settings"
-               class="flex items-center gap-2">
+               class="flex items-center gap-2 text-primary">
               <i class="ri-settings-3-line text-base" aria-hidden="true"></i>
               Settings
             </a>
@@ -95,8 +88,11 @@
           <div class="card bg-base-200 shadow">
             <div class="card-body p-4">
               <div class="flex justify-between items-center mb-3">
-                <h2 class="card-title text-base">Discovered Nodes</h2>
-                <button id="btn-refresh" class="btn btn-sm btn-ghost gap-1">
+                <span class="flex items-center gap-2 text-base">
+                  <i class="ri-signal-tower-line"></i>
+                  <h2 class="card-title">Discovered Nodes</h2>
+                </span>
+                <button id="btn-refresh" class="btn btn-sm btn-secondary gap-1">
                   <i class="ri-refresh-line text-base" aria-hidden="true"></i>
                   Refresh
                 </button>

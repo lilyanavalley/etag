@@ -18,6 +18,9 @@
 //! | `SCAN_INTERVAL_SECS`  | `5`     | Seconds to pause between scan passes         |
 //! | `DEVICE_TIMEOUT_SECS` | `300`   | Seconds before a device is considered "away" |
 //! | `STATS_INTERVAL_SECS` | `60`    | Seconds between device-stats log summaries   |
+//! | `TRANSPORT_MODE`      | `gatt`  | `gatt` or `mesh` runtime mode                |
+//! | `MESH_POLL_INTERVAL_SECS` | `5` | Mesh heartbeat interval in mesh mode         |
+//! | `MESH_INGEST_BIND_ADDR` | `127.0.0.1:9478` | UDP bind address for mesh ingest |
 //!
 //! # Example `.env` / systemd `EnvironmentFile`
 //!
@@ -31,6 +34,15 @@
 //! ```
 
 use anyhow::{Context, Result};
+
+/// Bridge runtime transport mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TransportMode {
+    /// Current BLE GATT central behavior.
+    Gatt,
+    /// Phase-0 mesh foundation runtime.
+    Mesh,
+}
 
 /// Runtime configuration for the etag-bridge server.
 #[derive(Debug, Clone)]
@@ -65,6 +77,15 @@ pub struct Config {
     ///
     /// Set to a large value (e.g. `86400`) to reduce noise.  Default: **60**.
     pub stats_interval_secs: u64,
+
+    /// Runtime transport mode (`gatt` or `mesh`).
+    pub transport_mode: TransportMode,
+
+    /// Heartbeat interval used by mesh runtime mode.
+    pub mesh_poll_interval_secs: u64,
+
+    /// UDP socket bind address for mesh ingest packets in mesh mode.
+    pub mesh_ingest_bind_addr: String,
 }
 
 impl Config {
@@ -73,19 +94,23 @@ impl Config {
     /// Returns an error if a required variable is missing or if any optional
     /// variable cannot be parsed as an unsigned integer.
     pub fn from_env() -> Result<Self> {
-        let grocy_url = std::env::var("GROCY_URL")
-            .context("GROCY_URL environment variable not set")?;
+        let grocy_url =
+            std::env::var("GROCY_URL").context("GROCY_URL environment variable not set")?;
 
-        let grocy_api_key = std::env::var("GROCY_API_KEY")
-            .context("GROCY_API_KEY environment variable not set")?;
+        let grocy_api_key =
+            std::env::var("GROCY_API_KEY").context("GROCY_API_KEY environment variable not set")?;
 
         Ok(Self {
             grocy_url,
             grocy_api_key,
-            scan_duration_secs:  env_u64("SCAN_DURATION_SECS",  30)?,
-            scan_interval_secs:  env_u64("SCAN_INTERVAL_SECS",   5)?,
+            scan_duration_secs: env_u64("SCAN_DURATION_SECS", 30)?,
+            scan_interval_secs: env_u64("SCAN_INTERVAL_SECS", 5)?,
             device_timeout_secs: env_u64("DEVICE_TIMEOUT_SECS", 300)?,
-            stats_interval_secs: env_u64("STATS_INTERVAL_SECS",  60)?,
+            stats_interval_secs: env_u64("STATS_INTERVAL_SECS", 60)?,
+            transport_mode: env_transport_mode("TRANSPORT_MODE", TransportMode::Gatt)?,
+            mesh_poll_interval_secs: env_u64("MESH_POLL_INTERVAL_SECS", 5)?,
+            mesh_ingest_bind_addr: std::env::var("MESH_INGEST_BIND_ADDR")
+                .unwrap_or_else(|_| "127.0.0.1:9478".to_owned()),
         })
     }
 }
@@ -96,6 +121,18 @@ fn env_u64(name: &str, default: u64) -> Result<u64> {
         Ok(s) => s
             .parse::<u64>()
             .with_context(|| format!("{name} must be a non-negative integer")),
+        Err(_) => Ok(default),
+    }
+}
+
+/// Read an environment variable as [`TransportMode`], returning `default` if unset.
+fn env_transport_mode(name: &str, default: TransportMode) -> Result<TransportMode> {
+    match std::env::var(name) {
+        Ok(s) => match s.trim().to_ascii_lowercase().as_str() {
+            "gatt" => Ok(TransportMode::Gatt),
+            "mesh" => Ok(TransportMode::Mesh),
+            _ => anyhow::bail!("{name} must be one of: gatt, mesh (got: {})", s),
+        },
         Err(_) => Ok(default),
     }
 }

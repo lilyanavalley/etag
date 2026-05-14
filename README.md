@@ -77,6 +77,7 @@ src/
   buttons.rs   — Debounced button handling
   battery.rs   — LiPo voltage monitoring via SAADC
   grocy.rs     — Grocy data types, Grocycode helpers, BLE GATT skeleton
+  mesh.rs      — BLE Mesh foundation message types and payload codecs (Phase-0)
 ```
 
 ### QR code generator (`src/qr.rs`)
@@ -190,6 +191,13 @@ for detailed integration instructions.
 - [ ] Support additional Grocy objects (locations, chores)
 - [ ] Port to nRF5340 (dual-core) for concurrent BLE + display
 
+## BLE Mesh planning
+
+For a deployment plan covering 30+ eTag nodes, optional repeaters, and a central
+Raspberry Pi bridge to Grocy, see:
+
+- [`docs/ble-mesh-plan.md`](docs/ble-mesh-plan.md)
+
 ---
 
 ## etag-bridge — Raspberry Pi BLE ↔ Grocy Bridge
@@ -230,6 +238,9 @@ The binary lands at `target/release/etag-bridge`.
 | `SCAN_INTERVAL_SECS`  | ❌        | `5`     | Pause between scan passes                       |
 | `DEVICE_TIMEOUT_SECS` | ❌        | `300`   | Seconds before a device is considered "away"    |
 | `STATS_INTERVAL_SECS` | ❌        | `60`    | Seconds between device-stats log summaries      |
+| `TRANSPORT_MODE`      | ❌        | `gatt`  | Bridge transport mode: `gatt` or `mesh`         |
+| `MESH_POLL_INTERVAL_SECS` | ❌    | `5`     | Heartbeat interval when `TRANSPORT_MODE=mesh`   |
+| `MESH_INGEST_BIND_ADDR` | ❌      | `127.0.0.1:9478` | UDP bind address for mesh ingest packets |
 
 ### Quick start
 
@@ -238,6 +249,28 @@ export GROCY_URL=http://grocy.local
 export GROCY_API_KEY=your_api_key_here
 RUST_LOG=etag_bridge=debug ./target/release/etag-bridge
 ```
+
+### Mesh mode (Phase-0 foundation)
+
+```bash
+export GROCY_URL=http://grocy.local
+export GROCY_API_KEY=your_api_key_here
+export TRANSPORT_MODE=mesh
+RUST_LOG=etag_bridge=info ./target/release/etag-bridge
+```
+
+`TRANSPORT_MODE=mesh` currently enables the mesh foundation runtime (idempotent
+mesh event processing with UDP ingest plus runtime heartbeat, while preserving
+the existing `gatt` mode as default production behavior.
+
+Mesh ingest packet wire format (little-endian, 16 bytes):
+
+- `node_unicast: u16`
+- `revision: u32`
+- `product_id: u32`
+- `op: u8` (`0=delta`, `1=absolute`)
+- `stock_value: i32`
+- `battery_pct: u8` (`0..=100`)
 
 ### Running as a systemd service
 

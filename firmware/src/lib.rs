@@ -7,4 +7,5 @@
 
 pub mod config;
 pub mod grocy;
+pub mod mesh;
 pub mod qr;

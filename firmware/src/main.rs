@@ -35,7 +35,7 @@ mod battery;
 mod buttons;
 mod display;
 
-use defmt_rtt as _;  // global logger
+use defmt_rtt as _; // global logger
 use embassy_executor::Spawner;
 use embassy_nrf::{
     bind_interrupts,
@@ -49,6 +49,7 @@ use panic_probe as _; // panic handler
 
 // Pure-logic modules come from the companion library crate (`src/lib.rs`).
 use etag::grocy::{grocycode_for_product, TagState};
+use etag::mesh::MeshTagPublisher;
 use etag::qr::QrCode;
 
 use buttons::ButtonEvent;
@@ -82,15 +83,14 @@ async fn main(_spawner: Spawner) {
     spi_config.mode = spim::MODE_0;
 
     let spi: Spim<peripherals::TWISPI0> = Spim::new_txonly(
-        p.TWISPI0, Irqs,
-        p.P0_03, // SCK
+        p.TWISPI0, Irqs, p.P0_03, // SCK
         p.P0_04, // MOSI
         spi_config,
     );
 
-    let cs   = Output::new(p.P0_05, Level::High, OutputDrive::Standard);
-    let dc   = Output::new(p.P0_06, Level::Low,  OutputDrive::Standard);
-    let rst  = Output::new(p.P0_07, Level::High, OutputDrive::Standard);
+    let cs = Output::new(p.P0_05, Level::High, OutputDrive::Standard);
+    let dc = Output::new(p.P0_06, Level::Low, OutputDrive::Standard);
+    let rst = Output::new(p.P0_07, Level::High, OutputDrive::Standard);
     let busy = Input::new(p.P0_08, Pull::None);
 
     let mut display = EpdDisplay::new(spi, dc, cs, rst, busy);
@@ -116,6 +116,8 @@ async fn main(_spawner: Spawner) {
         .product_name
         .push_str("Product")
         .unwrap_or_else(|_| defmt::warn!("Product name truncated (capacity exceeded)"));
+    let product_id = MeshTagPublisher::parse_product_id(state.grocycode.as_str()).unwrap_or(1);
+    let mut mesh_publisher = MeshTagPublisher::new(product_id);
 
     // ── Initialise display ────────────────────────────────────────────────────
     display.init().await;
@@ -147,10 +149,24 @@ async fn main(_spawner: Spawner) {
             ButtonEvent::Increment => {
                 state.increment();
                 defmt::info!("Stock → {}", state.stock_count);
+                let _frame = mesh_publisher.build_delta_frame(1, bat_pct);
+                defmt::debug!(
+                    "mesh publish delta product={} delta={} battery={}",
+                    product_id,
+                    1,
+                    bat_pct
+                );
             }
             ButtonEvent::Decrement => {
                 state.decrement();
                 defmt::info!("Stock → {}", state.stock_count);
+                let _frame = mesh_publisher.build_delta_frame(-1, bat_pct);
+                defmt::debug!(
+                    "mesh publish delta product={} delta={} battery={}",
+                    product_id,
+                    -1,
+                    bat_pct
+                );
             }
         }
 

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="cynical dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>etag Node Manager</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+
+  <body class="min-h-screen bg-base-100 text-base-content">
+
+    <!-- ── Top navbar ─────────────────────────────────────────────────── -->
+    <div class="navbar bg-base-200 shadow px-4 gap-2">
+      <div class="flex-1 flex items-center gap-3">
+        <i class="ri-price-tag-2-fill text-primary" aria-hidden="true"></i>
+        <span class="font-bold text-lg text-primary tracking-tight">etag</span>
+        <span class="text-base-content/50 text-sm hidden sm:inline">Node Manager</span>
+      </div>
+
+      <!-- Global alert (auto-dismisses) -->
+      <div id="global-alert" class="hidden transition-all"></div>
+    </div>
+
+    <!-- ── Main layout: sidebar + content ─────────────────────────────── -->
+    <div class="flex min-h-[calc(100vh-4rem)]">
+
+      <!-- Sidebar navigation -->
+      <aside class="w-52 bg-base-200 p-3 flex flex-col gap-1 shrink-0">
+        <ul class="menu menu-md w-full gap-0.5">
+          <li>
+            <a id="nav-dashboard" data-tab="dashboard"
+               class="flex items-center gap-2 active text-primary">
+              <i class="ri-dashboard-3-line text-base" aria-hidden="true"></i>
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a id="nav-provision" data-tab="provision"
+               class="flex items-center gap-2 text-primary">
+              <i class="ri-tools-line text-base" aria-hidden="true"></i>
+              Provision Node
+            </a>
+          </li>
+          <li>
+            <a id="nav-link" data-tab="link"
+               class="flex items-center gap-2 text-primary">
+              <i class="ri-links-line text-base" aria-hidden="true"></i>
+              Link to Grocy
+            </a>
+          </li>
+          <li>
+            <a id="nav-settings" data-tab="settings"
+               class="flex items-center gap-2 text-primary">
+              <i class="ri-settings-3-line text-base" aria-hidden="true"></i>
+              Settings
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- ── Tab panels ────────────────────────────────────────────────── -->
+      <main class="flex-1 p-5 overflow-auto">
+
+        <!-- ── Dashboard ─────────────────────────────────────────── -->
+        <div id="panel-dashboard" class="tab-panel space-y-5">
+
+          <!-- Stats row -->
+          <div class="stats stats-horizontal shadow w-full bg-base-200">
+            <div class="stat">
+              <div class="stat-title">Total Nodes</div>
+              <div class="stat-value" id="stat-total">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title">Connected</div>
+              <div class="stat-value text-success" id="stat-connected">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title">Low Battery</div>
+              <div class="stat-value text-error" id="stat-low-bat">—</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title">Not Linked</div>
+              <div class="stat-value text-warning" id="stat-unlinked">—</div>
+            </div>
+          </div>
+
+          <!-- Node table -->
+          <div class="card bg-base-200 shadow">
+            <div class="card-body p-4">
+              <div class="flex justify-between items-center mb-3">
+                <span class="flex items-center gap-2 text-base">
+                  <i class="ri-signal-tower-line"></i>
+                  <h2 class="card-title">Discovered Nodes</h2>
+                </span>
+                <button id="btn-refresh" class="btn btn-sm btn-secondary gap-1">
+                  <i class="ri-refresh-line text-base" aria-hidden="true"></i>
+                  Refresh
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="table table-zebra table-sm w-full">
+                  <thead>
+                    <tr>
+                      <th>Address</th>
+                      <th>Name</th>
+                      <th>Status</th>
+                      <th>Product / Grocycode</th>
+                      <th class="text-center">Stock</th>
+                      <th class="text-center">Battery</th>
+                      <th class="text-center">RSSI</th>
+                      <th>Last Seen</th>
+                    </tr>
+                  </thead>
+                  <tbody id="node-table-body">
+                    <tr>
+                      <td colspan="8" class="text-center py-10">
+                        <span class="loading loading-spinner loading-md opacity-40"></span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div><!-- /panel-dashboard -->
+
+        <!-- ── Provision Node ─────────────────────────────────────── -->
+        <div id="panel-provision" class="tab-panel hidden space-y-4 max-w-lg">
+          <h2 class="text-xl font-bold">Provision Node</h2>
+
+          <div role="alert" class="alert alert-warning text-sm">
+            <i class="ri-error-warning-line text-xl shrink-0" aria-hidden="true"></i>
+            <span>
+              BLE Mesh provisioning is a <strong>work in progress</strong>.
+              This panel will send a request to the bridge, which currently returns
+              a stub response. Check back when the mesh branch is merged.
+            </span>
+          </div>
+
+          <div class="card bg-base-200 shadow">
+            <div class="card-body gap-4">
+              <form id="provision-form" class="flex flex-col gap-4">
+                <div class="form-control">
+                  <label class="label" for="provision-address">
+                    <span class="label-text">Node BLE Address</span>
+                  </label>
+                  <input id="provision-address" type="text" name="address"
+                         placeholder="AA:BB:CC:DD:EE:FF"
+                         class="input input-bordered font-mono"
+                         pattern="([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}"
+                         required />
+                </div>
+                <div class="form-control">
+                  <label class="label" for="provision-key">
+                    <span class="label-text">Mesh Network Key (optional, WIP)</span>
+                  </label>
+                  <input id="provision-key" type="text" name="mesh_network_key"
+                         placeholder="Leave blank for default"
+                         class="input input-bordered font-mono" />
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Send Provision Request
+                </button>
+              </form>
+              <div id="provision-result" class="hidden"></div>
+            </div>
+          </div>
+        </div><!-- /panel-provision -->
+
+        <!-- ── Link to Grocy ──────────────────────────────────────── -->
+        <div id="panel-link" class="tab-panel hidden space-y-4 max-w-lg">
+          <h2 class="text-xl font-bold">Link Node to Grocy Item</h2>
+          <p class="text-sm text-base-content/70">
+            Assign a Grocy product to a node by writing its grocycode.
+            The bridge will carry the update to the node's GATT characteristic
+            on the next connection.
+          </p>
+
+          <div class="card bg-base-200 shadow">
+            <div class="card-body gap-4">
+              <form id="link-form" class="flex flex-col gap-4">
+                <div class="form-control">
+                  <label class="label" for="link-address">
+                    <span class="label-text">Node BLE Address</span>
+                  </label>
+                  <input id="link-address" type="text" name="address"
+                         placeholder="AA:BB:CC:DD:EE:FF"
+                         class="input input-bordered font-mono"
+                         pattern="([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}"
+                         required />
+                </div>
+                <div class="form-control">
+                  <label class="label" for="link-grocycode">
+                    <span class="label-text">Grocycode</span>
+                    <span class="label-text-alt text-base-content/50">e.g. grcy-p-42</span>
+                  </label>
+                  <input id="link-grocycode" type="text" name="grocycode"
+                         placeholder="grcy-p-42"
+                         class="input input-bordered font-mono"
+                         pattern="grcy-p-\d+"
+                         required />
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Link Node
+                </button>
+              </form>
+              <div id="link-result" class="hidden"></div>
+            </div>
+          </div>
+        </div><!-- /panel-link -->
+
+        <!-- ── Settings ───────────────────────────────────────────── -->
+        <div id="panel-settings" class="tab-panel hidden space-y-4 max-w-lg">
+          <h2 class="text-xl font-bold">Settings</h2>
+
+          <div class="card bg-base-200 shadow">
+            <div class="card-body gap-4">
+              <h3 class="font-semibold">Bridge Connection</h3>
+              <form id="config-form" class="flex flex-col gap-4">
+                <div class="form-control">
+                  <label class="label" for="bridge-addr">
+                    <span class="label-text">Bridge gRPC Address</span>
+                    <span class="label-text-alt text-base-content/50">default: http://127.0.0.1:50051</span>
+                  </label>
+                  <input id="bridge-addr" type="text" name="bridge-addr"
+                         placeholder="http://127.0.0.1:50051"
+                         class="input input-bordered font-mono" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+              </form>
+              <div id="config-result" class="hidden"></div>
+            </div>
+          </div>
+
+          <div class="card bg-base-200 shadow">
+            <div class="card-body">
+              <h3 class="font-semibold mb-2">About</h3>
+              <p class="text-sm text-base-content/70">
+                etag Node Manager — GUI client for the etag BLE inventory-tag system.<br />
+                Communicates with <code class="text-xs bg-base-300 px-1 rounded">etag-bridge</code>
+                via gRPC.
+              </p>
+            </div>
+          </div>
+        </div><!-- /panel-settings -->
+
+      </main>
+    </div><!-- /layout -->
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

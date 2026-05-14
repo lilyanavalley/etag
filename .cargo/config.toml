@@ -1,18 +1,14 @@
-[target.thumbv7em-none-eabihf]
-# Use probe-rs to flash and run on the nRF52840 development kit.
-# Install with: cargo install probe-rs-tools
-runner = "probe-rs run --chip nRF52840_xxAA"
-
-# Link against the Cortex-M4F-with-FPU linker script provided by cortex-m-rt
-# and the defmt RTT section linker script.
-rustflags = [
-    "-C", "link-arg=-Tlink.x",
-    "-C", "link-arg=-Tdefmt.x",
-]
-
-[build]
-# Always cross-compile for the nRF52840 (Cortex-M4F).
-target = "thumbv7em-none-eabihf"
+# Workspace-level Cargo configuration.
+#
+# ARM / firmware-specific settings (default target, linker flags, probe-rs
+# runner) live in firmware/.cargo/config.toml and only apply when building
+# from within the firmware/ directory.
+#
+# To build the firmware binary, use:
+#   cd firmware && cargo build --release
+#
+# To build the bridge server (native Linux):
+#   cargo build -p etag-bridge --release
 
 [env]
 # Set the defmt log level.  Override at the command line with:

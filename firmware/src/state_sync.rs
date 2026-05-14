@@ -114,6 +114,20 @@ pub fn publish_bridge_update(update: BridgeUpdate<'_>) -> Result<u8, BridgeUpdat
 ///
 /// Invalid fields (too-long strings) and queue backpressure are logged and
 /// skipped, while other valid fields continue to be published.
+///
+/// Example:
+/// ```ignore
+/// let report = state_sync::publish_bridge_update_best_effort(state_sync::BridgeUpdate {
+///     connected: Some(true),
+///     product_name: Some("Oat Milk"),
+///     grocycode: Some("grcy-p-42"),
+///     stock_count: Some(7),
+/// });
+///
+/// if report.skipped_too_long > 0 || report.skipped_queue_full > 0 {
+///     // Optional: mirror into host-side logs/metrics.
+/// }
+/// ```
 #[allow(dead_code)]
 pub fn publish_bridge_update_best_effort(update: BridgeUpdate<'_>) -> BridgeUpdateBestEffortReport {
     let mut report = BridgeUpdateBestEffortReport::default();

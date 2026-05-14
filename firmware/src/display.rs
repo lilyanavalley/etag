@@ -65,11 +65,8 @@ const BYTES_PER_ROW: usize = DISP_WIDTH_PX / 8;
 /// All SPI operations are `async` (backed by `embassy-nrf` SPIM).  Call
 /// [`EpdDisplay::init`] once after power-on, then render to the framebuffer
 /// with the helper methods and flush via [`EpdDisplay::full_update`].
-pub struct EpdDisplay<'d, T>
-where
-    T: embassy_nrf::spim::Instance,
-{
-    spi: Spim<'d, T>,
+pub struct EpdDisplay<'d> {
+    spi: Spim<'d>,
     dc: Output<'d>,
     cs: Output<'d>,
     rst: Output<'d>,
@@ -78,13 +75,10 @@ where
     framebuf: [u8; DISP_BUF_BYTES],
 }
 
-impl<'d, T> EpdDisplay<'d, T>
-where
-    T: embassy_nrf::spim::Instance,
-{
+impl<'d> EpdDisplay<'d> {
     /// Create a new display driver instance.
     pub fn new(
-        spi: Spim<'d, T>,
+        spi: Spim<'d>,
         dc: Output<'d>,
         cs: Output<'d>,
         rst: Output<'d>,
@@ -238,13 +232,7 @@ where
     /// - `product_name` – short product name shown top-right
     /// - `stock`        – current stock count shown large in the centre-right
     /// - `battery_pct`  – battery percentage (0-100) shown small bottom-right
-    pub fn render(
-        &mut self,
-        qr: &QrCode,
-        product_name: &str,
-        stock: i32,
-        battery_pct: u8,
-    ) {
+    pub fn render(&mut self, qr: &QrCode, product_name: &str, stock: i32, battery_pct: u8) {
         self.clear_white();
         self.draw_qr(qr);
         self.draw_info(product_name, stock, battery_pct);
@@ -342,10 +330,7 @@ where
         let bat_style = MonoTextStyle::new(&FONT_6X13, BinaryColor::Off);
         let _ = Text::with_alignment(
             bat_str.as_str(),
-            Point::new(
-                (DISP_WIDTH_PX - 4) as i32,
-                (DISP_HEIGHT_PX - 4) as i32,
-            ),
+            Point::new((DISP_WIDTH_PX - 4) as i32, (DISP_HEIGHT_PX - 4) as i32),
             bat_style,
             Alignment::Right,
         )

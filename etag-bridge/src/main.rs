@@ -55,8 +55,9 @@ mod config;
 mod device;
 mod grpc;
 mod grocy;
+mod mesh;
 
-pub use config::Config;
+pub use config::{Config, TransportMode};
 pub use device::DeviceRegistry;
 pub use grocy::GrocyClient;
 
@@ -88,19 +89,15 @@ async fn main() -> Result<()> {
     // Override at runtime with: RUST_LOG=etag_bridge=trace,btleplug=debug
     fmt()
         .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                EnvFilter::new("etag_bridge=debug,btleplug=info,reqwest=warn")
-            }),
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("etag_bridge=debug,btleplug=info,reqwest=warn")),
         )
         .with_target(true)
         .with_line_number(false)
         .compact()
         .init();
 
-    info!(
-        version = env!("CARGO_PKG_VERSION"),
-        "etag-bridge starting"
-    );
+    info!(version = env!("CARGO_PKG_VERSION"), "etag-bridge starting");
 
     // ── Configuration ─────────────────────────────────────────────────────────
     let config = Config::from_env()?;
@@ -110,21 +107,28 @@ async fn main() -> Result<()> {
         scan_interval_secs = config.scan_interval_secs,
         stats_interval_secs = config.stats_interval_secs,
         grpc_listen_addr   = %config.grpc_listen_addr,
+        transport_mode = ?config.transport_mode,
         "Configuration loaded"
     );
 
     // ── Shared application state ──────────────────────────────────────────────
     let state = Arc::new(AppState {
-        grocy:    GrocyClient::new(&config.grocy_url, &config.grocy_api_key),
+        grocy: GrocyClient::new(&config.grocy_url, &config.grocy_api_key),
         registry: DeviceRegistry::new(),
         config,
     });
 
     // ── BLE task ──────────────────────────────────────────────────────────────
-    let ble_state  = Arc::clone(&state);
-    let ble_handle = tokio::spawn(async move {
-        if let Err(e) = ble::run(ble_state).await {
-            error!(?e, "BLE task exited with error");
+    let transport_state = Arc::clone(&state);
+    let transport_mode = state.config.transport_mode;
+    let transport_handle = tokio::spawn(async move {
+        let result = match transport_mode {
+            TransportMode::Gatt => ble::run(transport_state).await,
+            TransportMode::Mesh => mesh::run(transport_state).await,
+        };
+
+        if let Err(e) = result {
+            error!(?e, ?transport_mode, "Transport task exited with error");
         }
     });
 
@@ -141,8 +145,8 @@ async fn main() -> Result<()> {
         _ = signal::ctrl_c() => {
             info!("Received Ctrl-C — shutting down");
         }
-        _ = ble_handle => {
-            info!("BLE task completed");
+        _ = transport_handle => {
+            info!(?transport_mode, "Transport task completed");
         }
         _ = grpc_handle => {
             info!("gRPC server stopped");

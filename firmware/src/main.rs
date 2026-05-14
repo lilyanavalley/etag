@@ -49,6 +49,8 @@ use embassy_time::Duration;
 use panic_probe as _; // panic handler
 
 // Pure-logic modules come from the companion library crate (`src/lib.rs`).
+use etag::grocy::{grocycode_for_product, TagState};
+use etag::mesh::MeshTagPublisher;
 use etag::qr::QrCode;
 use etag::{
     config::{STOCK_MAX, STOCK_MIN},
@@ -143,6 +145,8 @@ async fn main(spawner: Spawner) {
         .product_name
         .push_str("Product")
         .unwrap_or_else(|_| defmt::warn!("Product name truncated (capacity exceeded)"));
+    let product_id = MeshTagPublisher::parse_product_id(state.grocycode.as_str()).unwrap_or(1);
+    let mut mesh_publisher = MeshTagPublisher::new(product_id);
 
     // Draw once at boot.
     let mut bat_pct = battery::read_percent(&mut saadc).await;
@@ -173,10 +177,24 @@ async fn main(spawner: Spawner) {
                 ButtonEvent::Increment => {
                     state.increment();
                     defmt::info!("Stock → {}", state.stock_count);
+                    let _frame = mesh_publisher.build_delta_frame(1, bat_pct);
+                    defmt::debug!(
+                        "mesh publish delta product={} delta={} battery={}",
+                        product_id,
+                        1,
+                        bat_pct
+                    );
                 }
                 ButtonEvent::Decrement => {
                     state.decrement();
                     defmt::info!("Stock → {}", state.stock_count);
+                    let _frame = mesh_publisher.build_delta_frame(-1, bat_pct);
+                    defmt::debug!(
+                        "mesh publish delta product={} delta={} battery={}",
+                        product_id,
+                        -1,
+                        bat_pct
+                    );
                 }
             }
         }

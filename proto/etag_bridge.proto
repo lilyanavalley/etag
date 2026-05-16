@@ -1,0 +1,125 @@
+// etag_bridge.proto — gRPC service definition for the etag-bridge server.
+//
+// The etag-bridge gRPC API gives GUI clients (and other tools) a structured
+// interface to the live state of all discovered etag BLE inventory nodes,
+// along with control operations for provisioning and Grocy linking.
+//
+// Usage:
+//   etag-bridge  → implements EtagBridgeServer (Rust/tonic, etag-bridge crate)
+//   etag-gui     → implements EtagBridgeClient (Rust/tonic, etag-gui crate)
+
+syntax = "proto3";
+
+package etag_bridge;
+
+// ── Service ──────────────────────────────────────────────────────────────────
+
+service EtagBridge {
+    // Return a snapshot of all currently known nodes.
+    rpc ListNodes (ListNodesRequest) returns (ListNodesResponse);
+
+    // Return a single node by BLE address, or NOT_FOUND.
+    rpc GetNode (GetNodeRequest) returns (NodeInfo);
+
+    // Server-streaming: push NodeInfo updates at the requested interval.
+    // Each tick sends one message per known node.
+    rpc WatchNodes (WatchNodesRequest) returns (stream NodeInfo);
+
+    // Request BLE Mesh provisioning for a node (WIP — returns an error stub).
+    rpc ProvisionNode (ProvisionNodeRequest) returns (ProvisionNodeResponse);
+
+    // Link a node to a Grocy product by writing its grocycode into the registry.
+    // The bridge will propagate the new value to the node's GATT characteristic
+    // on the next connection.
+    rpc LinkNodeToGrocy (LinkNodeRequest) returns (LinkNodeResponse);
+}
+
+// ── Node message ─────────────────────────────────────────────────────────────
+
+message NodeInfo {
+    // BLE MAC address (e.g. "AA:BB:CC:DD:EE:FF"). Always present.
+    string address = 1;
+
+    // BLE advertisement device name. Absent if never received.
+    optional string name = 2;
+
+    // Grocycode read from GATT (e.g. "grcy-p-42"). Absent if not yet read.
+    optional string grocycode = 3;
+
+    // Grocy product ID parsed from grocycode. Absent if not linked.
+    optional uint32 product_id = 4;
+
+    // Human-readable product name from GATT. Absent if not read.
+    optional string product_name = 5;
+
+    // Current in-stock quantity. Absent if not yet read.
+    optional int32 stock_count = 6;
+
+    // Battery percentage 0–100. Absent if not read.
+    optional uint32 battery_pct = 7;
+
+    // Signal strength in dBm (more negative = weaker). Absent if unknown.
+    optional int32 rssi = 8;
+
+    // Unix timestamp (seconds) of first discovery.
+    int64 first_seen_unix = 9;
+
+    // Unix timestamp (seconds) of most recent BLE event or characteristic update.
+    int64 last_seen_unix = 10;
+
+    // True while a GATT connection is currently open.
+    bool connected = 11;
+
+    // Derived status — computed from connected flag and last_seen age.
+    NodeStatus status = 12;
+}
+
+enum NodeStatus {
+    NODE_STATUS_UNKNOWN      = 0;
+    NODE_STATUS_ACTIVE       = 1;  // recently seen or connected
+    NODE_STATUS_AWAY         = 2;  // not seen for > device_timeout_secs
+    NODE_STATUS_PROVISIONING = 3;  // BLE Mesh provisioning in progress (WIP)
+}
+
+// ── Request / Response messages ───────────────────────────────────────────────
+
+message ListNodesRequest {}
+
+message ListNodesResponse {
+    repeated NodeInfo nodes = 1;
+}
+
+message GetNodeRequest {
+    string address = 1;
+}
+
+message WatchNodesRequest {
+    // Polling interval in milliseconds.  0 → server default (1 000 ms).
+    uint32 interval_ms = 1;
+}
+
+message ProvisionNodeRequest {
+    // BLE address of the node to provision.
+    string address = 1;
+
+    // BLE Mesh network key (WIP — field reserved for future implementation).
+    optional string mesh_network_key = 2;
+}
+
+message ProvisionNodeResponse {
+    bool   success = 1;
+    string message = 2;
+}
+
+message LinkNodeRequest {
+    // BLE address of the node.
+    string address   = 1;
+
+    // Grocycode to assign (must match "grcy-p-<id>" format).
+    string grocycode = 2;
+}
+
+message LinkNodeResponse {
+    bool   success = 1;
+    string message = 2;
+}

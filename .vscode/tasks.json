@@ -1,0 +1,67 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "firmware: check (thumbv7em-none-eabihf)",
+      "type": "shell",
+      "command": "cargo",
+      "args": [
+        "check",
+        "-p",
+        "etag",
+        "--target",
+        "thumbv7em-none-eabihf"
+      ],
+      "group": "build",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "detail": "Check embedded firmware against the nRF52840 target."
+    },
+    {
+      "label": "firmware: build (thumbv7em-none-eabihf)",
+      "type": "shell",
+      "command": "cargo",
+      "args": [
+        "build",
+        "-p",
+        "etag",
+        "--target",
+        "thumbv7em-none-eabihf",
+        "--release"
+      ],
+      "group": "build",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "detail": "Release build for embedded firmware target."
+    },
+    {
+      "label": "bridge: check (host)",
+      "type": "shell",
+      "command": "cargo",
+      "args": [
+        "check",
+        "-p",
+        "etag-bridge"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "detail": "Check the Raspberry Pi BLE bridge on host target."
+    },
+    {
+      "label": "workspace: check (all)",
+      "type": "shell",
+      "command": "cargo",
+      "args": [
+        "check",
+        "--workspace"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "detail": "Check all workspace members using default targets."
+    }
+  ]
+}

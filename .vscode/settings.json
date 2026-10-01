@@ -1,0 +1,19 @@
+{
+  "rust-analyzer.checkOnSave.overrideCommand": [
+    "cargo",
+    "check",
+    "--workspace",
+    "--target",
+    "thumbv7em-none-eabihf"
+  ],
+  "rust-analyzer.check.overrideCommand": [
+    "cargo",
+    "check",
+    "--workspace",
+    "--target",
+    "thumbv7em-none-eabihf"
+  ],
+  "[rust]": {
+    "editor.formatOnSave": true
+  }
+}

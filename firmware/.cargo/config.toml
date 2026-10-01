@@ -1,0 +1,20 @@
+[target.thumbv7em-none-eabihf]
+# Use probe-rs to flash and run on the nRF52840 development kit.
+# Install with: cargo install probe-rs-tools
+runner = "probe-rs run --chip nRF52840_xxAA"
+
+# Link against the Cortex-M4F-with-FPU linker script provided by cortex-m-rt
+# and the defmt RTT section linker script.
+rustflags = [
+    "-C", "link-arg=-Tlink.x",
+    "-C", "link-arg=-Tdefmt.x",
+]
+
+[build]
+# Always cross-compile for the nRF52840 (Cortex-M4F).
+target = "thumbv7em-none-eabihf"
+
+[env]
+# Set the defmt log level.  Override at the command line with:
+#   DEFMT_LOG=info cargo run
+DEFMT_LOG = "debug"

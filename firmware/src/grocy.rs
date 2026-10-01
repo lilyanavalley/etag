@@ -65,7 +65,7 @@ use crate::config::{MAX_GROCYCODE_LEN, MAX_PRODUCT_NAME_LEN, STOCK_MAX, STOCK_MI
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// All persistent state associated with one inventory tag.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct TagState {
     /// Grocy product identifier (e.g. `"grcy-p-42"`).
     pub grocycode: String<MAX_GROCYCODE_LEN>,

@@ -22,7 +22,7 @@
 use embassy_nrf::{
     peripherals,
     saadc::{self, AnyInput, ChannelConfig, Config, Saadc},
-    Peripheral,
+    Peri,
 };
 
 use etag::config::{SAADC_MAX, SAADC_VREF, VBAT_ATTENUATION, VBAT_EMPTY_V, VBAT_FULL_V};
@@ -53,11 +53,11 @@ pub async fn read_percent(saadc: &mut Saadc<'_, 1>) -> u8 {
 ///
 /// Call this once in `main` and pass the result to [`read_percent`].
 pub fn create_saadc<'d>(
-    saadc_peri: impl Peripheral<P = peripherals::SAADC> + 'd,
+    saadc_peri: Peri<'d, peripherals::SAADC>,
     irqs: impl embassy_nrf::interrupt::typelevel::Binding<
-        embassy_nrf::interrupt::typelevel::SAADC,
-        saadc::InterruptHandler,
-    > + 'd,
+            embassy_nrf::interrupt::typelevel::SAADC,
+            saadc::InterruptHandler,
+        > + 'd,
     pin: AnyInput,
 ) -> Saadc<'d, 1> {
     let config = Config::default();

@@ -1,0 +1,49 @@
+[package]
+name = "etag-bridge"
+version = "0.1.0"
+edition = "2021"
+description = "Raspberry Pi BLE ↔ Grocy ERP bridge for the etag inventory-tag system"
+license = "MIT"
+
+[[bin]]
+name = "etag-bridge"
+path = "src/main.rs"
+
+[build-dependencies]
+# gRPC code generation from proto/etag_bridge.proto
+tonic-prost-build    = "0.14"
+protoc-bin-vendored  = "3"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+
+# BLE central — Linux/BlueZ on Raspberry Pi, also macOS/Windows for development
+btleplug = "0.11"
+
+# HTTP client for Grocy REST API
+reqwest = { version = "0.12", features = ["json"] }
+
+# Serialization (Grocy API requests/responses)
+serde       = { version = "1", features = ["derive"] }
+serde_json  = "1"
+
+# Structured logging / tracing
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# Error handling
+anyhow = "1"
+
+# BLE characteristic UUIDs
+uuid = { version = "1", features = ["v4"] }
+
+# Device last-seen timestamps
+chrono = { version = "0.4", features = ["serde"] }
+
+# gRPC server (exposes bridge state to GUI and other clients)
+tonic        = { version = "0.14", features = ["transport"] }
+tonic-prost  = "0.14"
+prost        = "0.14"
+tokio-stream = "0.1"
